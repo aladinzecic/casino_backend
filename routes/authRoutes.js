@@ -1,6 +1,5 @@
 import express from "express"
 import {connectToDatabase} from "../lib/db.js"
-import bcrypt from "bcrypt"
 
 const router = express.Router()
 
@@ -13,7 +12,6 @@ router.post('/register', async (req,res)=>{
         if(rows.length>0){
             return res.status(409).json({message:"User with this email already exists!"})
         }
-        const hashPassword= await bcrypt.hash(password,10)
         await db.query('INSERT INTO user (username,password,email,createdAt,isActive) VALUES (?,?,?,?,?)',[username,password,email,now,1])
         res.status(201).json({message:"User succesfuly created!"})
     }   
@@ -34,7 +32,6 @@ router.post('/login', async (req,res)=>{
         }
 
         const user = rows[0];
-        const isPasswordCorrect = await bcrypt.compare(password, user.password);
         if (password!=user.password) {
             return res.status(401).json({ message: "Invalid credentials!" });
         }
