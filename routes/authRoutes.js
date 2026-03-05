@@ -238,20 +238,19 @@ router.post('/updatePage', async (req, res) => {
     // Broj svih korisnika
     const [numOfUsersRows] = await db.query('SELECT COUNT(*) AS count FROM `users`');
 
-    // Broj novih korisnika danas
-    // const [newUsersRows] = await db.query(
-    //   'SELECT COUNT(*) AS dailyUsers FROM `users` WHERE DATE(FROM_UNIXTIME(createdAt / 1000)) = CURDATE()'
-    // );
+    const [newUsersRows] = await db.query(
+      'SELECT COUNT(*) AS dailyUsers FROM `users` WHERE DATE(FROM_UNIXTIME(createdAt / 1000)) = CURDATE()'
+    );
 
-    // // Broj aktivnih korisnika u poslednja 3 minuta
-    // const [activeUsersRows] = await db.query(
-    //   'SELECT COUNT(*) AS activeUsers FROM `users` WHERE lastActiveAt > UNIX_TIMESTAMP(DATE_SUB(NOW(), INTERVAL 3 MINUTE)) * 1000'
-    // );
+    // Broj aktivnih korisnika u poslednja 3 minuta
+    const [activeUsersRows] = await db.query(
+      'SELECT COUNT(*) AS activeUsers FROM `users` WHERE lastActiveAt > UNIX_TIMESTAMP(DATE_SUB(NOW(), INTERVAL 3 MINUTE)) * 1000'
+    );
 
     res.status(200).json({
       totalUsers: numOfUsersRows[0].count,
-      // newUsers: newUsersRows[0].dailyUsers,
-      // activeUsers: activeUsersRows[0].activeUsers
+      newUsers: newUsersRows[0].dailyUsers,
+      activeUsers: activeUsersRows[0].activeUsers
     });
 
   } catch (e) {
