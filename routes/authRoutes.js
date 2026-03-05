@@ -35,27 +35,50 @@ router.post('/register', async (req,res)=>{
 
 router.post('/login', async (req,res)=>{
     
-    const {email,password}=req.body
+    const {email,password} = req.body
+
     try {
-        const db = await connectToDatabase();
+        const db = await connectToDatabase()
 
-        const [rows] = await db.query('SELECT * FROM users WHERE email = ?', [email]);
+        const [rows] = await db.query(
+            'SELECT * FROM users WHERE email = ?',
+            [email]
+        )
+
         if (rows.length === 0) {
-            return res.status(404).json({ message: "users with this email doesn't exist!" });
+            return res.status(404).json({ message: "users with this email doesn't exist!" })
         }
 
-        const user = rows[0];
-        if (password!=user.password) {
-            return res.status(401).json({ message: "Invalid credentials!" });
+        const user = rows[0]
+
+        // bcrypt proverava password
+        const match = await bcrypt.compare(password, user.password)
+
+        if (!match) {
+            return res.status(401).json({ message: "Invalid credentials!" })
         }
 
-        // Login successful
-        res.status(200).json({ mesage: "Login successful!", user: { id: user.id, email: user.email } });
+        // ako je user banovan
+        if(user.isBanned){
+            return res.status(403).json({ message: "User is banned!" })
+        }
+
+        // login success
+        res.status(200).json({
+            message: "Login successful!",
+            user: {
+                id: user.id,
+                email: user.email,
+                username: user.username,
+                isBanned: user.isBanned
+            }
+        })
+
     } catch (err) {
-        res.status(500).json({ error: "An error occurred", details: err });
+        console.error(err)
+        res.status(500).json({ error: "An error occurred", details: err })
     }
 })
-
 
 // Ruta koja vraća podatke o korisniku na osnovu njegovog userId
 router.get('/user', async (req, res) => {
