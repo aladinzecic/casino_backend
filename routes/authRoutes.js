@@ -231,37 +231,31 @@ router.post('/updatePage', async (req, res) => {
   });
   
 
-  router.get('/getAdminData', async (req, res) => {
+ router.get('/getAdminData', async (req, res) => {
   try {
-    // Konekcija sa bazom
     const db = await connectToDatabase();
     
-    // SQL upit za broj korisnika
-    const numOfUsers = await db.query('SELECT COUNT(*) AS count FROM users');
-    const newUsers = await db.query(
+    const [numOfUsersRows] = await db.query('SELECT COUNT(*) AS count FROM users');
+    const [newUsersRows] = await db.query(
       'SELECT COUNT(*) AS dailyUsers FROM users WHERE DATE(FROM_UNIXTIME(createdAt / 1000)) = CURDATE()'
     );
+    const [activeUsersRows] = await db.query(
+      'SELECT COUNT(*) AS activeUsers FROM users WHERE lastActiveAt > UNIX_TIMESTAMP(DATE_SUB(NOW(), INTERVAL 3 MINUTE)) * 1000'
+    );
     
-    const activeUsers=await db.query(
-      'SELECT COUNT(*) AS activeUsers FROM users WHERE lastActiveAt > UNIX_TIMESTAMP(DATE_SUB(NOW(), INTERVAL 3 MINUTE)) * 1000;'
-    )
-    const deposited=await db.query(
-1    )
-    const length = numOfUsers[0]; // Pristup rezultatu
-    const newUsersNum=newUsers[0]
-    const activeUsersNum=activeUsers[0]
-    // Provera rezultata
-    if (length === 0) {
-      return res.status(404).json({ message: 'No users found' });
-    }
-    if (newUsersNum === 0) {
-      return res.status(404).json({ message: 'No users found' });
-    }
+    // Primer za deposited ako postoji tabela deposit
+    // const [depositedRows] = await db.query(
+    //   'SELECT SUM(amount) AS totalDeposited FROM deposits'
+    // );
 
-    // Uspešan odgovor
-    res.status(200).json({ totalUsers: length, newUsers:newUsersNum, activeUsers:activeUsersNum });
+    res.status(200).json({
+      totalUsers: numOfUsersRows[0].count,
+      newUsers: newUsersRows[0].dailyUsers,
+      activeUsers: activeUsersRows[0].activeUsers,
+      // totalDeposited: depositedRows[0].totalDeposited || 0
+    });
   } catch (e) {
-    // Greška na serveru
+    console.error(e);
     res.status(500).json({ message: 'Error fetching users count', error: e.message });
   }
 });
