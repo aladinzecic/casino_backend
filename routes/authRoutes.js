@@ -247,10 +247,19 @@ router.post('/updatePage', async (req, res) => {
       'SELECT COUNT(*) AS activeUsers FROM `users` WHERE lastActiveAt > UNIX_TIMESTAMP(DATE_SUB(NOW(), INTERVAL 3 MINUTE)) * 1000'
     );
 
+    const [totalDepositedRows] = await db.query(
+  'SELECT SUM(depositedMoney) AS totalDeposited FROM users'
+);
+    const [totalWithdrawnRows] = await db.query(
+  'SELECT SUM(depositedMoney) AS withdrawnMoney FROM users'
+);
+
     res.status(200).json({
       totalUsers: numOfUsersRows[0].count,
       newUsers: newUsersRows[0].dailyUsers,
-      activeUsers: activeUsersRows[0].activeUsers
+      activeUsers: activeUsersRows[0].activeUsers,
+      withdrawnMoney: totalWithdrawnRows[0].withdrawnMoney,
+      totalDeposited: totalDepositedRows[0].totalDeposited
     });
 
   } catch (e) {
