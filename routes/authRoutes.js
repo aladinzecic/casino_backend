@@ -237,7 +237,7 @@ router.post('/updatePage', async (req, res) => {
     const db = await connectToDatabase();
     
     // SQL upit za broj korisnika
-    const numOfUsers = await db.query('SELECT COUNT(*) AS count FROM user');
+    const numOfUsers = await db.query('SELECT COUNT(*) AS count FROM users');
     const newUsers = await db.query(
       'SELECT COUNT(*) AS dailyUsers FROM users WHERE DATE(FROM_UNIXTIME(createdAt / 1000)) = CURDATE()'
     );
