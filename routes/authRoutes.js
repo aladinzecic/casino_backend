@@ -1,6 +1,6 @@
 import express from "express"
 import {connectToDatabase} from "../lib/db.js"
-
+import pool from "../lib/db.js"
 const router = express.Router()
 
 router.post('/register', async (req,res)=>{
@@ -231,21 +231,19 @@ router.post('/updatePage', async (req, res) => {
   });
   
 
- router.get('/getAdminData', async (req, res) => {
+router.get('/getAdminData', async (req, res) => {
   try {
-    const db = await connectToDatabase();
-
     // Broj svih korisnika
-    const [numOfUsersRows] = await db.query('SELECT COUNT(*) AS count FROM `users`');
+    const [numOfUsersRows] = await pool.query('SELECT COUNT(*) AS count FROM `users`');
 
-    // Broj novih korisnika danas
-    const [newUsersRows] = await db.query(
-      'SELECT COUNT(*) AS dailyUsers FROM `users` WHERE DATE(FROM_UNIXTIME(createdAt / 1000)) = CURDATE()'
+    // Broj novih korisnika danas (pretpostavljamo DATETIME kolonu)
+    const [newUsersRows] = await pool.query(
+      'SELECT COUNT(*) AS dailyUsers FROM `users` WHERE DATE(createdAt) = CURDATE()'
     );
 
-    // Broj aktivnih korisnika u poslednja 3 minuta
-    const [activeUsersRows] = await db.query(
-      'SELECT COUNT(*) AS activeUsers FROM `users` WHERE lastActiveAt > UNIX_TIMESTAMP(DATE_SUB(NOW(), INTERVAL 3 MINUTE)) * 1000'
+    // Broj aktivnih korisnika u poslednja 3 minuta (DATETIME kolona)
+    const [activeUsersRows] = await pool.query(
+      'SELECT COUNT(*) AS activeUsers FROM `users` WHERE lastActiveAt > DATE_SUB(NOW(), INTERVAL 3 MINUTE)'
     );
 
     res.status(200).json({
@@ -253,7 +251,6 @@ router.post('/updatePage', async (req, res) => {
       newUsers: newUsersRows[0].dailyUsers,
       activeUsers: activeUsersRows[0].activeUsers
     });
-
   } catch (e) {
     console.error("Error in /getAdminData:", e);
     res.status(500).json({ message: 'Error fetching users count', error: e.message });
