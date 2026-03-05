@@ -251,7 +251,7 @@ router.post('/updatePage', async (req, res) => {
   'SELECT SUM(depositedMoney) AS totalDeposited FROM users'
 );
     const [totalWithdrawnRows] = await db.query(
-  'SELECT SUM(depositedMoney) AS withdrawnMoney FROM users'
+  'SELECT SUM(withdrawnMoney) AS withdrawnMoney FROM users'
 );
 
     res.status(200).json({
