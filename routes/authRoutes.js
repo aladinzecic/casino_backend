@@ -306,7 +306,32 @@ router.post('/deposit', async (req, res) => {
 });
 
 
-  
+router.get("/users", async (req, res) => {
+  const db = await connectToDatabase()
+
+  const [rows] = await db.query("SELECT id, username, email FROM users")
+
+  res.json(rows)
+})
+
+router.post("/ban-user", async (req, res) => {
+  try {
+    const { id } = req.body
+
+    const db = await connectToDatabase()
+
+    await db.query(
+      "UPDATE users SET isBanned = 1 WHERE id = ?",
+      [id]
+    )
+
+    res.status(200).json({ message: "User banned successfully" })
+
+  } catch (err) {
+    console.log(err)
+    res.status(500).json({ message: "Server error" })
+  }
+})
   
   
 
