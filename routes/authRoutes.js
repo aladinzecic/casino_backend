@@ -1,19 +1,32 @@
 import express from "express"
 import {connectToDatabase} from "../lib/db.js"
-
+import bcrypt from "bcrypt"
 const router = express.Router()
 
 router.post('/register', async (req,res)=>{
     const {username,password,email}=req.body
     try{
-      const now=Date.now()
-        const db= await connectToDatabase()
-        const [rows]= await db.query('SELECT * FROM users WHERE email = ?',[email])
-        if(rows.length>0){
-            return res.status(409).json({message:"userswith this email already exists!"})
+        const now = Date.now()
+        const db = await connectToDatabase()
+
+        const [rows] = await db.query(
+            'SELECT * FROM users WHERE email = ?',
+            [email]
+        )
+
+        if(rows.length > 0){
+            return res.status(409).json({message:"users with this email already exists!"})
         }
-        await db.query('INSERT INTO users (username,password,email,createdAt,isActive) VALUES (?,?,?,?,?)',[username,password,email,now,1])
-        res.status(201).json({message:"userssuccesfuly created!"})
+
+        // hash password
+        const hashedPassword = await bcrypt.hash(password, 10)
+
+        await db.query(
+            'INSERT INTO users (username,password,email,createdAt,isActive) VALUES (?,?,?,?,?)',
+            [username, hashedPassword, email, now, 1]
+        )
+
+        res.status(201).json({message:"users succesfuly created!"})
     }   
     catch(err){
         res.status(500).json(err)
