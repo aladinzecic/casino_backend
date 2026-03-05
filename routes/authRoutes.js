@@ -235,13 +235,21 @@ router.post('/updatePage', async (req, res) => {
   try {
     const db = await connectToDatabase();
     
-    const [numOfUsersRows] = await db.query('SELECT COUNT(*) AS count FROM users');
-    const [newUsersRows] = await db.query(
-      'SELECT COUNT(*) AS dailyUsers FROM users WHERE DATE(FROM_UNIXTIME(createdAt / 1000)) = CURDATE()'
-    );
-    const [activeUsersRows] = await db.query(
-      'SELECT COUNT(*) AS activeUsers FROM users WHERE lastActiveAt > UNIX_TIMESTAMP(DATE_SUB(NOW(), INTERVAL 3 MINUTE)) * 1000'
-    );
+    console.log("Fetching total users...");
+const [numOfUsersRows] = await db.query('SELECT COUNT(*) AS count FROM users');
+console.log("Total users fetched:", numOfUsersRows);
+
+console.log("Fetching new users...");
+const [newUsersRows] = await db.query(
+  'SELECT COUNT(*) AS dailyUsers FROM users WHERE DATE(FROM_UNIXTIME(createdAt / 1000)) = CURDATE()'
+);
+console.log("New users fetched:", newUsersRows);
+
+console.log("Fetching active users...");
+const [activeUsersRows] = await db.query(
+  'SELECT COUNT(*) AS activeUsers FROM users WHERE lastActiveAt > UNIX_TIMESTAMP(DATE_SUB(NOW(), INTERVAL 3 MINUTE)) * 1000'
+);
+console.log("Active users fetched:", activeUsersRows);
     
     // Primer za deposited ako postoji tabela deposit
     // const [depositedRows] = await db.query(
