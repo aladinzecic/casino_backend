@@ -110,7 +110,7 @@ router.post('/updateMoney', async (req, res) => {
         'UPDATE users SET money = ? WHERE id = ?',
         [money, userId]
       );
-  
+
       res.status(200).json({ message: 'Caracter number and evolution level updated successfully!' });
     } catch (err) {
       res.status(500).json({ message: 'Error updating caracter number and evolution level' });
