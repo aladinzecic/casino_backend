@@ -18,7 +18,6 @@ router.post('/register', async (req,res)=>{
             return res.status(409).json({message:"users with this email already exists!"})
         }
 
-        // hash password
         const hashedPassword = await bcrypt.hash(password, 10)
 
         await db.query(
@@ -51,19 +50,16 @@ router.post('/login', async (req,res)=>{
 
         const user = rows[0]
 
-        // bcrypt proverava password
         const match = await bcrypt.compare(password, user.password)
 
         if (!match) {
             return res.status(401).json({ message: "Invalid credentials!" })
         }
 
-        // ako je user banovan
         if(user.isBanned){
             return res.status(403).json({ message: "User is banned!" })
         }
 
-        // login success
         res.status(200).json({
             message: "Login successful!",
             user: {
@@ -80,38 +76,30 @@ router.post('/login', async (req,res)=>{
     }
 })
 
-// Ruta koja vraća podatke o korisniku na osnovu njegovog userId
 router.get('/user', async (req, res) => {
-    const { userId } = req.query;  // Preuzimamo userId iz query parametra
+    const { userId } = req.query;
     try {
-        // Povezivanje sa bazom podataka
         const db = await connectToDatabase();
 
-        // Upit za pronalaženje korisnika na osnovu userId
         const [rows] = await db.query('SELECT  username, razred,caracterNum,caracterEvolLevel,dayStreak,totalXp,numOfCookies,dailySpinsLeft,mathCurr,englishCurr,infoCurr,geoCurr FROM users WHERE id = ?', [userId]);
 
-        // Ako korisnik nije pronađen, vraćamo 404
         if (rows.length === 0) {
             return res.status(404).json({ message: 'users not found' });
         }
 
-        // Ako je korisnik pronađen, vraćamo njegove podatke
         res.json(rows[0]);
     } catch (err) {
-        // Ako dođe do greške u bazi, vraćamo 500
         res.status(500).json({ error: 'Error retrieving users data', details: err });
     }
 });
+
 router.get('/getPage', async (req, res) => {
-    const { userId,page } = req.query;  // Preuzimamo userId iz query parametra
+    const { userId,page } = req.query;
     try {
-        // Povezivanje sa bazom podataka
         const db = await connectToDatabase();
 
-        // Upit za pronalaženje korisnika na osnovu userId
         const [rows] = await db.query('SELECT  rouletteVisited, plinkoVisited,huntVisited,minesVisited FROM users WHERE id = ?', [userId]);
         
-        // Ako korisnik nije pronađen, vraćamo 404
         if (rows.length === 0) {
           return res.status(404).json({ message: 'users not found' });
         }
@@ -127,13 +115,10 @@ router.get('/getPage', async (req, res) => {
         else if(page==="MINES"){
           res.json(rows[0].minesVisited);
         }
-        // Ako je korisnik pronađen, vraćamo njegove podatke
     } catch (err) {
-        // Ako dođe do greške u bazi, vraćamo 500
         res.status(500).json({ error: 'Error retrieving users data', details: err });
     }
 });
-
 
 router.post('/updateMoney', async (req, res) => {
     const { userId, money } = req.body;
@@ -141,7 +126,6 @@ router.post('/updateMoney', async (req, res) => {
     try {
       const db = await connectToDatabase();
   
-      // Ažuriraj oba svojstva u bazi
       await db.query(
         'UPDATE users SET money = ? WHERE id = ?',
         [money, userId]
@@ -160,7 +144,6 @@ router.post('/updatePage', async (req, res) => {
     try {
       const db = await connectToDatabase();
   
-      // Ažuriraj oba svojstva u bazi
       if(page==="ROULLETE"){
         await db.query(
           'UPDATE users SET rouletteVisited = ? WHERE id = ?',
@@ -193,8 +176,7 @@ router.post('/updatePage', async (req, res) => {
   });
 
 
-
-  router.get('/getMoney/:userId', async (req, res) => {
+router.get('/getMoney/:userId', async (req, res) => {
     const { userId } = req.params;
     try {
       const db = await connectToDatabase();
@@ -218,7 +200,7 @@ router.post('/updatePage', async (req, res) => {
   });
 
 
-  router.get('/getUserData/:userId', async (req, res) => {
+router.get('/getUserData/:userId', async (req, res) => {
     const { userId } = req.params;
     try {
       const db = await connectToDatabase();
@@ -242,7 +224,7 @@ router.post('/updatePage', async (req, res) => {
   });
 
 
-  router.post('/getId', async (req, res) => {
+router.post('/getId', async (req, res) => {
     const { email } = req.body;
   
     try {
@@ -271,14 +253,12 @@ router.post('/updatePage', async (req, res) => {
   try {
     const db = await connectToDatabase();
 
-    // Broj svih korisnika
     const [numOfUsersRows] = await db.query('SELECT COUNT(*) AS count FROM `users`');
 
     const [newUsersRows] = await db.query(
       'SELECT COUNT(*) AS dailyUsers FROM `users` WHERE DATE(FROM_UNIXTIME(createdAt / 1000)) = CURDATE()'
     );
 
-    // Broj aktivnih korisnika u poslednja 3 minuta
     const [activeUsersRows] = await db.query(
       'SELECT COUNT(*) AS activeUsers FROM `users` WHERE lastActiveAt > UNIX_TIMESTAMP(DATE_SUB(NOW(), INTERVAL 3 MINUTE)) * 1000'
     );
@@ -304,8 +284,6 @@ router.post('/updatePage', async (req, res) => {
   }
 });
 
-
-
 router.post('/updateActivity', async (req, res) => {
   const { userId } = req.body;
   const db = await connectToDatabase();
@@ -318,11 +296,10 @@ router.post('/updateActivity', async (req, res) => {
 
     res.status(200).json({ message: 'Activity updated successfully' });
   } catch (err) {
-    console.error('Error updating activity:', err);  // Loguj detalje greške
+    console.error('Error updating activity:', err);
     res.status(500).json({ message: 'Error updating activity', error: err.message });
   }
 });
-
 
 router.post('/deposit', async (req, res) => {
   const { depositedMoney,userId } = req.body;
@@ -336,11 +313,10 @@ router.post('/deposit', async (req, res) => {
 
     res.status(200).json({ message: 'Activity updated successfully' });
   } catch (err) {
-    console.error('Error updating activity:', err);  // Loguj detalje greške
+    console.error('Error updating activity:', err);
     res.status(500).json({ message: 'Error updating activity', error: err.message });
   }
 });
-
 
 router.get("/users", async (req, res) => {
   const db = await connectToDatabase()
@@ -369,6 +345,4 @@ router.post("/ban-user", async (req, res) => {
   }
 })
   
-  
-
 export default router
